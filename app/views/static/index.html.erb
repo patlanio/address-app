@@ -1,3 +1,12 @@
 <%= javascript_pack_tag 'application' %>
 
-<%= react_component('AddressForm') %>
+<%= react_component('AddressForm', {
+  street: 'Juarez',
+  ext_num: '123',
+  int_num: 'A',
+  zipcode: '64000',
+  neighborhood: 'Centro',
+  city: 'Monterrey',
+  state: 'Nuevo Leon',
+  country: 'México'
+}) %>
