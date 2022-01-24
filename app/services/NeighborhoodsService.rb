@@ -10,8 +10,14 @@ class NeighborhoodsService
   def self.mexico(zipcode)
     mx = Country.find_by_name('Mexico')
     params = { cp: zipcode }
-    res = get_request(mx.postalApiUrl, params)
-    JSON.parse(res.parsed_response).dig('codigo_postal', 'colonias').map { |c| c['colonia'] }
+    response = get_request(mx.postalApiUrl, params)
+    data = JSON.parse(response.parsed_response)['codigo_postal']
+
+    {
+      city: data['municipio'],
+      state: data['estado'],
+      neighborhoods: data['colonias'].map { |c| c['colonia'] }
+    }
   end
 
   def self.get_request(url, query)
