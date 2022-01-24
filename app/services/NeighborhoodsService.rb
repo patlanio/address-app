@@ -4,7 +4,7 @@ class NeighborhoodsService
   def self.get(country, zipcode)
     public_send(country.to_s.downcase, zipcode)
   rescue StandardError
-    []
+    { city: '', state: '', neighborhoods: [] }
   end
 
   def self.mexico(zipcode)
