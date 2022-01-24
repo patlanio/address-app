@@ -2,7 +2,17 @@ import React from "react"
 import PropTypes from "prop-types"
 
 class AddressForm extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = {
+      neighborhoods: [],
+      ...props
+    }
+  }
+
   render () {
+    const availableNeighborhoods = this.state.neighborhoods.length > 0
+
     return (
       <React.Fragment>
         <div className="container" style={{maxWidth: 300}}>
@@ -12,7 +22,7 @@ class AddressForm extends React.Component {
             </div>
             <div className="col-4">
               <select className="form-select">
-                {this.props.countries.map((country, i) =>
+                {this.state.countries.map((country, i) =>
                   (<option value={country.id} key={country.id} style={{backgroundImage: `url(${country.flagUrl})`}}>
                     {country.name}
                   </option>))
@@ -23,9 +33,9 @@ class AddressForm extends React.Component {
           <div className="row">
             <div className="col">
               <div className="input-group mb-3">
-                <input type="text" className="form-control" placeholder="Calle" aria-label="Calle" value={ this.props.address.street } />
-                <input type="text" className="form-control" placeholder="Número exterior" aria-label="Número exterior" value={ this.props.address.num_ext } />
-                <input type="text" className="form-control" placeholder="Número interior" aria-label="Número interior" value={ this.props.address.num_int }/>
+                <input type="text" className="form-control" placeholder="Calle" aria-label="Calle" value={ this.state.address.street } />
+                <input type="text" className="form-control" placeholder="Número exterior" aria-label="Número exterior" value={ this.state.address.num_ext } />
+                <input type="text" className="form-control" placeholder="Número interior" aria-label="Número interior" value={ this.state.address.num_int }/>
               </div>
             </div>
           </div>
@@ -33,12 +43,25 @@ class AddressForm extends React.Component {
             <div className="col">
               <div className="input-group mb-3">
                 <span className="input-group-text">CP</span>
-                <input type="text" className="form-control" placeholder="64000" aria-label="Código postal" value={ this.props.address.zipcode } />
-                <select className="form-select" disabled={!!this.props.neighborhood}>
-                  <option defaultValue>Colonia</option>
-                  <option value="1">Centro</option>
-                  <option value="2">Contry</option>
-                  <option value="3">Del Valle</option>
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="64000"
+                  aria-label="Código postal"
+                  onChange={() => false }
+                  value={ this.state.address.zipcode } />
+                <select
+                  className="form-select"
+                  disabled={!availableNeighborhoods}
+                  onChange={() => false } >
+                  {
+                    availableNeighborhoods ? this.state.neighborhoods.map(neighborhood =>
+                      (<option value={neighborhood} key={neighborhood}>
+                        {neighborhood}
+                      </option>))
+                    :
+                      (<option>Colonia</option>)
+                  }
                 </select>
               </div>
             </div>
@@ -47,8 +70,12 @@ class AddressForm extends React.Component {
             <div className="col">
               <figure className="text-end">
                 <figcaption className="blockquote-footer">
-                  <cite title={`${this.props.address.city}, ${this.props.address.state}, ${this.props.address.country}`}>
-                    {`${this.props.address.city}, ${this.props.address.state}, ${this.props.address.country}`}
+                  <cite title={`${this.state.address.city}, ${this.state.address.state}, ${this.state.address.country}`}>
+                    {
+                      this.state.address.zipcode && this.state.address.neighborhood ?
+                      `${this.state.address.city}, ${this.state.address.state}, ${this.state.address.country}` :
+                      'Introduce un código postal válido'
+                    }
                   </cite>
                 </figcaption>
               </figure>
@@ -61,18 +88,23 @@ class AddressForm extends React.Component {
           </div>
         </div>
         <ul>
-          <li>street: { this.props.address.street }</li>
-          <li>ext_num: { this.props.address.ext_num }</li>
-          <li>int_num: { this.props.address.int_num }</li>
-          <li>zipcode: { this.props.address.zipcode }</li>
-          <li>neighborhood: { this.props.address.neighborhood }</li>
-          <li>city: { this.props.address.city }</li>
-          <li>state: { this.props.address.state }</li>
-          <li>country: { this.props.address.country }</li>
+          <li>street: { this.state.address.street }</li>
+          <li>ext_num: { this.state.address.ext_num }</li>
+          <li>int_num: { this.state.address.int_num }</li>
+          <li>zipcode: { this.state.address.zipcode }</li>
+          <li>neighborhood: { this.state.address.neighborhood }</li>
+          <li>city: { this.state.address.city }</li>
+          <li>state: { this.state.address.state }</li>
+          <li>country: { this.state.address.country }</li>
         </ul>
       </React.Fragment>
     );
   }
+}
+
+AddressForm.prototypes = {
+  address: PropTypes.object,
+  countries: PropTypes.array
 }
 
 export default AddressForm
