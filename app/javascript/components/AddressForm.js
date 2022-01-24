@@ -8,6 +8,7 @@ class AddressForm extends React.Component {
     this.state = {
       neighborhoods: [],
       address: {},
+      fetchingZipCodeRelatedData: false,
       ...props
     }
   }
@@ -19,6 +20,7 @@ class AddressForm extends React.Component {
         const fetchedNeighborhoods = data.neighborhoods || []
         this.setState(state => ({
           neighborhoods: fetchedNeighborhoods,
+          fetchingZipCodeRelatedData: false,
           address: {
             ...state.address,
             neighborhood: fetchedNeighborhoods[0],
@@ -31,9 +33,10 @@ class AddressForm extends React.Component {
 
   handleNeighborhoodChange (neighborhood) {
     this.setState(state => ({
+      fetchingZipCodeRelatedData: false,
       address: {
         ...state.address,
-        neighborhood: neighborhood
+        neighborhood: neighborhood,
       }
     }))
   }
@@ -42,10 +45,12 @@ class AddressForm extends React.Component {
     const country = this.state.countries.find(country => country.name === this.state.address.country) || this.state.countries[0]
 
     this.setState(state => ({
+      fetchingZipCodeRelatedData: true,
       address: {
         ...state.address,
         zipcode: zipcode,
-        neighborhood: null
+        neighborhood: null,
+        country: country.name,
       }
     }), () => this.fetchNeighborhoods(country.name, zipcode))
   }
@@ -86,10 +91,10 @@ class AddressForm extends React.Component {
         <div className="container" style={{maxWidth: 300}}>
           <div className="row justify-content-between align-items-start">
             <div className="col-8">
-              <h1>Dirección</h1>
+              <h2>Dirección</h2>
             </div>
             <div className="col-4">
-              <select className="form-select">
+              <select className="form-select mb-3" required>
                 {this.state.countries.map((country, i) =>
                   (<option value={country.id} key={country.id} style={{backgroundImage: `url(${country.flagUrl})`}}>
                     {country.name}
@@ -102,11 +107,11 @@ class AddressForm extends React.Component {
             <div className="col">
               <div className="input-group mb-3">
                 <input type="text" className="form-control" placeholder="Calle" aria-label="Calle" value={ this.state.address.street }
-                  onChange={(e) => this.handleStreetChange(e.target.value) } />
+                  required onChange={(e) => this.handleStreetChange(e.target.value) } />
                 <input type="text" className="form-control" placeholder="Número exterior" aria-label="Número exterior" value={ this.state.address.num_ext }
-                  onChange={(e) => this.handleExtNumChange(e.target.value) } />
+                  required onChange={(e) => this.handleExtNumChange(e.target.value) } />
                 <input type="text" className="form-control" placeholder="Número interior" aria-label="Número interior" value={ this.state.address.num_int }
-                  onChange={(e) => this.handleIntNumChange(e.target.value) } />
+                  required onChange={(e) => this.handleIntNumChange(e.target.value) } />
               </div>
             </div>
           </div>
@@ -115,14 +120,17 @@ class AddressForm extends React.Component {
               <div className="input-group mb-3">
                 <span className="input-group-text">CP</span>
                 <input
+                  required
                   type="text"
                   className="form-control"
                   placeholder="64000"
                   aria-label="Código postal"
+                  disabled={this.state.fetchingZipCodeRelatedData}
                   onChange={(e) => this.handleZipCodeChange(e.target.value) }
                   value={ this.state.address.zipcode } />
                 <select
                   className="form-select"
+                  required
                   disabled={!availableNeighborhoods}
                   onChange={(e) => this.handleNeighborhoodChange(e.target.value) } >
                   {
@@ -141,10 +149,12 @@ class AddressForm extends React.Component {
             <div className="col">
               <figure className="text-end">
                 <figcaption className="blockquote-footer">
-                  <cite title={`${this.state.address.city}, ${this.state.address.state}, ${this.state.address.country}`}>
+                  <cite title={`${this.state.address.city}, ${this.state.address.state}`}>
                     {
                       this.state.address.zipcode && this.state.address.neighborhood ?
-                      `${this.state.address.city}, ${this.state.address.state}, ${this.state.address.country}` :
+                      `${this.state.address.city}, ${this.state.address.state}` :
+                      this.state.fetchingZipCodeRelatedData ?
+                      'Obteniendo colonias' :
                       'Introduce un código postal válido'
                     }
                   </cite>
