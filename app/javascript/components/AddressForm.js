@@ -8,6 +8,7 @@ class AddressForm extends React.Component {
     this.state = {
       neighborhoods: [],
       address: {},
+      errors: {},
       fetchingZipCodeRelatedData: false,
       ...props
     }
@@ -82,13 +83,44 @@ class AddressForm extends React.Component {
     }))
   }
 
+  handleSumbit(e) {
+    e.preventDefault()
+
+    const requestOptions = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+      },
+      body: JSON.stringify(this.state.address)
+    }
+
+    fetch('/v1/addresses', requestOptions)
+      .then(async response => {
+        const data = await response.json()
+        console.log('Processed successfully', response.status, data)
+        if (response.status !== 200) return Promise.reject(data)
+
+        this.setState(state => ({
+          address: {
+            ...state.address,
+            ...data
+          },
+          errors: {}
+        }))
+      })
+      .catch(errors => {
+        this.setState({ errors: errors });
+        console.error('There was an error!', errors);
+    });
+  }
 
   render () {
     const availableNeighborhoods = this.state.neighborhoods.length > 0
 
     return (
       <React.Fragment>
-        <div className="container" style={{maxWidth: 300}}>
+        <form onSubmit={(e) => this.handleSumbit(e) } className="container" style={{maxWidth: 300}}>
           <div className="row justify-content-between align-items-start">
             <div className="col-8">
               <h2>Dirección</h2>
@@ -108,9 +140,9 @@ class AddressForm extends React.Component {
               <div className="input-group mb-3">
                 <input type="text" className="form-control" placeholder="Calle" aria-label="Calle" value={ this.state.address.street }
                   required onChange={(e) => this.handleStreetChange(e.target.value) } />
-                <input type="text" className="form-control" placeholder="Número exterior" aria-label="Número exterior" value={ this.state.address.num_ext }
+                <input type="text" className="form-control" placeholder="Número exterior" aria-label="Número exterior" value={ this.state.address.ext_num }
                   required onChange={(e) => this.handleExtNumChange(e.target.value) } />
-                <input type="text" className="form-control" placeholder="Número interior" aria-label="Número interior" value={ this.state.address.num_int }
+                <input type="text" className="form-control" placeholder="Número interior" aria-label="Número interior" value={ this.state.address.int_num }
                   required onChange={(e) => this.handleIntNumChange(e.target.value) } />
               </div>
             </div>
@@ -167,8 +199,21 @@ class AddressForm extends React.Component {
               <button type="submit" className="btn btn-primary">Guardar</button>
             </div>
           </div>
-        </div>
+          {!!Object.entries(this.state.errors).length && <div className="row">
+            <div className="alert alert-danger" role="alert">
+              <ul>
+                {
+                  Object.entries(this.state.errors).map(([key, error], i) =>
+                    (<li key={i}>
+                      {key}: {error}
+                    </li>))
+                }
+              </ul>
+            </div>
+          </div>}
+        </form>
         <ul>
+          <li>id: { this.state.address.id }</li>
           <li>street: { this.state.address.street }</li>
           <li>ext_num: { this.state.address.ext_num }</li>
           <li>int_num: { this.state.address.int_num }</li>
@@ -177,6 +222,7 @@ class AddressForm extends React.Component {
           <li>city: { this.state.address.city }</li>
           <li>state: { this.state.address.state }</li>
           <li>country: { this.state.address.country }</li>
+          <li>errors: { JSON.stringify(this.state.errors) }</li>
         </ul>
       </React.Fragment>
     );
