@@ -86,33 +86,36 @@ class AddressForm extends React.Component {
   handleSumbit(e) {
     e.preventDefault()
 
-    const requestOptions = {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
-      },
-      body: JSON.stringify(this.state.address)
-    }
+    this.setState(state => ({
+      errors: {}
+    }), () => {
+      const requestOptions = {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+        },
+        body: JSON.stringify(this.state.address)
+      }
 
-    fetch('/v1/addresses', requestOptions)
-      .then(async response => {
-        const data = await response.json()
-        console.log('Processed successfully', response.status, data)
-        if (response.status !== 200) return Promise.reject(data)
+      fetch('/v1/addresses', requestOptions)
+        .then(async response => {
+          const data = await response.json()
 
-        this.setState(state => ({
-          address: {
-            ...state.address,
-            ...data
-          },
-          errors: {}
-        }))
+          if (response.status !== 200) return Promise.reject(data)
+
+          this.setState(state => ({
+            address: {
+              ...state.address,
+              ...data
+            },
+            errors: {}
+          }))
+        })
+        .catch(errors => {
+          this.setState({ errors: errors })
       })
-      .catch(errors => {
-        this.setState({ errors: errors });
-        console.error('There was an error!', errors);
-    });
+    })
   }
 
   render () {
@@ -120,13 +123,21 @@ class AddressForm extends React.Component {
 
     return (
       <React.Fragment>
-        <form onSubmit={(e) => this.handleSumbit(e) } className="container" style={{maxWidth: 300}}>
+        <form
+          onSubmit={(e) => this.handleSumbit(e) }
+          className="container"
+          ref={this.form}
+          style={{maxWidth: 300}}
+          >
           <div className="row justify-content-between align-items-start">
             <div className="col-8">
               <h2>Dirección</h2>
             </div>
             <div className="col-4">
-              <select className="form-select mb-3" required>
+              <select
+                required
+                alt={this.state.errors.country || 'País'}
+                className={`form-select mb-3 ${this.state.errors.country && 'is-invalid'}`}>
                 {this.state.countries.map((country, i) =>
                   (<option value={country.id} key={country.id} style={{backgroundImage: `url(${country.flagUrl})`}}>
                     {country.name}
@@ -138,12 +149,24 @@ class AddressForm extends React.Component {
           <div className="row">
             <div className="col">
               <div className="input-group mb-3">
-                <input type="text" className="form-control" placeholder="Calle" aria-label="Calle" value={ this.state.address.street }
-                  required onChange={(e) => this.handleStreetChange(e.target.value) } />
-                <input type="text" className="form-control" placeholder="Número exterior" aria-label="Número exterior" value={ this.state.address.ext_num }
-                  required onChange={(e) => this.handleExtNumChange(e.target.value) } />
-                <input type="text" className="form-control" placeholder="Número interior" aria-label="Número interior" value={ this.state.address.int_num }
-                  required onChange={(e) => this.handleIntNumChange(e.target.value) } />
+                <input type="text" required placeholder="Calle" aria-label="Calle"
+                  className={`form-control ${this.state.errors.street && 'is-invalid'}`}
+                  alt={this.state.errors.street || 'Calle'}
+                  value={ this.state.address.street }
+                  onChange={(e) => this.handleStreetChange(e.target.value) } />
+                <input type="text" required placeholder="Número exterior" aria-label="Número exterior"
+                  className={`form-control ${this.state.errors.num_ext && 'is-invalid'}`}
+                  alt={this.state.errors.num_ext || 'Número exterior'}
+                  value={ this.state.address.ext_num }
+                  onChange={(e) => this.handleExtNumChange(e.target.value) } />
+                <input type="text" required placeholder="Número interior" aria-label="Número interior"
+                  className={`form-control ${this.state.errors.num_int && 'is-invalid'}`}
+                  alt={this.state.errors.num_int || 'Número interior'}
+                  value={ this.state.address.int_num }
+                  onChange={(e) => this.handleIntNumChange(e.target.value) } />
+                { (this.state.errors.street || this.state.errors.ext_num) &&
+                  <div className="invalid-tooltip">{[this.state.errors.street, this.state.errors.ext_num].join(', ')}</div>
+                }
               </div>
             </div>
           </div>
@@ -154,15 +177,17 @@ class AddressForm extends React.Component {
                 <input
                   required
                   type="text"
-                  className="form-control"
+                  className={`form-control ${this.state.errors.zipcode && 'is-invalid'}`}
                   placeholder="64000"
                   aria-label="Código postal"
+                  alt={this.state.errors.zipcode || 'Código postal'}
                   disabled={this.state.fetchingZipCodeRelatedData}
                   onChange={(e) => this.handleZipCodeChange(e.target.value) }
                   value={ this.state.address.zipcode } />
                 <select
-                  className="form-select"
                   required
+                  className={`form-control ${this.state.errors.neighborhood && 'is-invalid'}`}
+                  alt={this.state.errors.neighborhood || 'Colonia'}
                   disabled={!availableNeighborhoods}
                   onChange={(e) => this.handleNeighborhoodChange(e.target.value) } >
                   {
@@ -174,6 +199,9 @@ class AddressForm extends React.Component {
                       (<option>Colonia</option>)
                   }
                 </select>
+                { (this.state.errors.zipcode || this.state.errors.neighborhood) &&
+                  <div className="invalid-tooltip">{[this.state.errors.zipcode, this.state.errors.neighborhood].join(', ')}</div>
+                }
               </div>
             </div>
           </div>
@@ -225,7 +253,7 @@ class AddressForm extends React.Component {
           <li>errors: { JSON.stringify(this.state.errors) }</li>
         </ul>
       </React.Fragment>
-    );
+    )
   }
 }
 
