@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_01_22_005520) do
+ActiveRecord::Schema.define(version: 2022_01_24_234031) do
 
   create_table "addresses", force: :cascade do |t|
     t.string "street"
@@ -32,6 +32,8 @@ ActiveRecord::Schema.define(version: 2022_01_22_005520) do
     t.string "postalApiUrl"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.string "code"
+    t.integer "ziplength"
   end
 
   add_foreign_key "addresses", "countries"
