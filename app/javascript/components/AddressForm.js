@@ -7,6 +7,7 @@ class AddressForm extends React.Component {
 
     this.state = {
       neighborhoods: [],
+      address: {},
       ...props
     }
   }
@@ -49,6 +50,34 @@ class AddressForm extends React.Component {
     }), () => this.fetchNeighborhoods(country.name, zipcode))
   }
 
+  handleStreetChange(street) {
+    this.setState(state => ({
+      address: {
+        ...state.address,
+        street: street,
+      }
+    }))
+  }
+
+  handleExtNumChange(ext_num) {
+    this.setState(state => ({
+      address: {
+        ...state.address,
+        ext_num: ext_num,
+      }
+    }))
+  }
+
+  handleIntNumChange(int_num) {
+    this.setState(state => ({
+      address: {
+        ...state.address,
+        int_num: int_num,
+      }
+    }))
+  }
+
+
   render () {
     const availableNeighborhoods = this.state.neighborhoods.length > 0
 
@@ -72,9 +101,12 @@ class AddressForm extends React.Component {
           <div className="row">
             <div className="col">
               <div className="input-group mb-3">
-                <input type="text" className="form-control" placeholder="Calle" aria-label="Calle" value={ this.state.address.street } />
-                <input type="text" className="form-control" placeholder="Número exterior" aria-label="Número exterior" value={ this.state.address.num_ext } />
-                <input type="text" className="form-control" placeholder="Número interior" aria-label="Número interior" value={ this.state.address.num_int }/>
+                <input type="text" className="form-control" placeholder="Calle" aria-label="Calle" value={ this.state.address.street }
+                  onChange={(e) => this.handleStreetChange(e.target.value) } />
+                <input type="text" className="form-control" placeholder="Número exterior" aria-label="Número exterior" value={ this.state.address.num_ext }
+                  onChange={(e) => this.handleExtNumChange(e.target.value) } />
+                <input type="text" className="form-control" placeholder="Número interior" aria-label="Número interior" value={ this.state.address.num_int }
+                  onChange={(e) => this.handleIntNumChange(e.target.value) } />
               </div>
             </div>
           </div>
