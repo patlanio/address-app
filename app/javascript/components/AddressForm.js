@@ -4,10 +4,49 @@ import PropTypes from "prop-types"
 class AddressForm extends React.Component {
   constructor(props) {
     super(props)
+
     this.state = {
       neighborhoods: [],
       ...props
     }
+  }
+
+  fetchNeighborhoods(country, zipcode) {
+    fetch(`/v1/addresses/neighborhoods?country=${country}&zipcode=${zipcode}`)
+      .then(response => response.json())
+      .then(data => {
+        const fetchedNeighborhoods = data.neighborhoods || []
+        this.setState(state => ({
+          neighborhoods: fetchedNeighborhoods,
+          address: {
+            ...state.address,
+            neighborhood: fetchedNeighborhoods[0],
+            state: data.state,
+            city: data.city
+          }
+        }))
+      })
+  }
+
+  handleNeighborhoodChange (neighborhood) {
+    this.setState(state => ({
+      address: {
+        ...state.address,
+        neighborhood: neighborhood
+      }
+    }))
+  }
+
+  handleZipCodeChange (zipcode) {
+    const country = this.state.countries.find(country => country.name === this.state.address.country) || this.state.countries[0]
+
+    this.setState(state => ({
+      address: {
+        ...state.address,
+        zipcode: zipcode,
+        neighborhood: null
+      }
+    }), () => this.fetchNeighborhoods(country.name, zipcode))
   }
 
   render () {
@@ -48,12 +87,12 @@ class AddressForm extends React.Component {
                   className="form-control"
                   placeholder="64000"
                   aria-label="Código postal"
-                  onChange={() => false }
+                  onChange={(e) => this.handleZipCodeChange(e.target.value) }
                   value={ this.state.address.zipcode } />
                 <select
                   className="form-select"
                   disabled={!availableNeighborhoods}
-                  onChange={() => false } >
+                  onChange={(e) => this.handleNeighborhoodChange(e.target.value) } >
                   {
                     availableNeighborhoods ? this.state.neighborhoods.map(neighborhood =>
                       (<option value={neighborhood} key={neighborhood}>
