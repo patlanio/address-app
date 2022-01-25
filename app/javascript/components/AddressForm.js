@@ -1,288 +1,294 @@
-import React from "react"
-import PropTypes from "prop-types"
+import React, { useState, useEffect } from "react"
+import { useParams } from "react-router-dom"
 
-class AddressForm extends React.Component {
-  constructor(props) {
-    super(props)
+function AddressForm(props) {
+  const params = useParams()
+  const [neighborhoods, setNeighborhoods] = useState([])
+  const [countries, setCountries] = useState([])
+  const [errors, setErrors] = useState({})
+  const [fetchingZipCodeRelatedData, setFetchingZipCodeRelatedData] = useState(false)
+  const [address, setAddress] = useState({
+    id: params.addressId,
+    street: '',
+    ext_num: '',
+    int_num: '',
+    zipcode: '',
+    neighborhood: '',
+    city: '',
+    state: '',
+    country: '',
+  })
 
-    this.state = {
-      neighborhoods: [],
-      countries: [],
-      address: {},
-      errors: {},
-      fetchingZipCodeRelatedData: false,
-      ...props
-    }
+  const fetchAddress = () => {
+    const id = address.id
+    if (!id) return
+
+    fetch(`/v1/addresses/${id}`, {method: 'GET'})
+      .then(response => response.json())
+      .then(data => {
+        setAddress({
+          ...address,
+          ...data
+        })
+        // fetchNeighborhoods(data.country, data.zipcode)
+      })
   }
 
-  componentWillMount() {
-    this.fetchCountries()
-  }
-
-  fetchCountries() {
+  const fetchCountries = () => {
     fetch(`/v1/countries/`)
       .then(response => response.json())
       .then(data => {
         const countries = data || []
-
-        this.setState(state => ({
-          countries: countries,
-          address: {
-            ...state.address,
-            country: countries[0].name
-          }
-        }))
+        setCountries(countries)
+        setAddress({
+          ...address,
+          country: countries[0].name
+        })
       })
   }
 
-  fetchNeighborhoods(country, zipcode) {
+  const fetchNeighborhoods = (country, zipcode) => {
+    setFetchingZipCodeRelatedData(true)
+
     fetch(`/v1/addresses/neighborhoods?country=${country}&zipcode=${zipcode}`)
       .then(response => response.json())
       .then(data => {
         const fetchedNeighborhoods = data.neighborhoods || []
-        this.setState(state => ({
-          neighborhoods: fetchedNeighborhoods,
-          fetchingZipCodeRelatedData: false,
-          address: {
-            ...state.address,
-            neighborhood: fetchedNeighborhoods[0],
-            state: data.state,
-            city: data.city
-          }
-        }))
-      })
-  }
 
-  handleNeighborhoodChange (neighborhood) {
-    this.setState(state => ({
-      fetchingZipCodeRelatedData: false,
-      address: {
-        ...state.address,
-        neighborhood: neighborhood,
-      }
-    }))
-  }
-
-  handleZipCodeChange (zipcode) {
-    const country = this.state.countries.find(country => country.name === this.state.address.country) || this.state.countries[0]
-
-    this.setState(state => ({
-      fetchingZipCodeRelatedData: true,
-      address: {
-        ...state.address,
-        zipcode: zipcode,
-        neighborhood: null,
-        country: country.name,
-      }
-    }), () => this.fetchNeighborhoods(country.name, zipcode))
-  }
-
-  handleStreetChange(street) {
-    this.setState(state => ({
-      address: {
-        ...state.address,
-        street: street,
-      }
-    }))
-  }
-
-  handleExtNumChange(ext_num) {
-    this.setState(state => ({
-      address: {
-        ...state.address,
-        ext_num: ext_num,
-      }
-    }))
-  }
-
-  handleIntNumChange(int_num) {
-    this.setState(state => ({
-      address: {
-        ...state.address,
-        int_num: int_num,
-      }
-    }))
-  }
-
-  handleSumbit(e) {
-    e.preventDefault()
-
-    this.setState(state => ({
-      errors: {}
-    }), () => {
-      const requestOptions = {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
-        },
-        body: JSON.stringify(this.state.address)
-      }
-
-      fetch('/v1/addresses', requestOptions)
-        .then(async response => {
-          const data = await response.json()
-
-          if (response.status !== 200) return Promise.reject(data)
-
-          this.setState(state => ({
-            address: {
-              ...state.address,
-              ...data
-            },
-            errors: {}
-          }))
+        setNeighborhoods(fetchedNeighborhoods)
+        setFetchingZipCodeRelatedData(false)
+        setAddress({
+          ...address,
+          neighborhood: fetchedNeighborhoods[0],
+          state: data.state,
+          city: data.city
         })
-        .catch(errors => {
-          this.setState({ errors: errors })
       })
+  }
+
+  const handleNeighborhoodChange = (neighborhood) => {
+    setFetchingZipCodeRelatedData(false)
+    setAddress({
+      ...address,
+      neighborhood: neighborhood,
     })
   }
 
-  render () {
-    const availableNeighborhoods = this.state.neighborhoods.length > 0
+  const handleZipCodeChange = (zipcode) => {
+    const country = countries.find(country => country.name === address.country) || countries[0]
+    const neighborhood = neighborhoods.find(neighborhood => neighborhood === address.neighborhood) || neighborhoods[0] || ''
 
-    return (
-      <React.Fragment>
-        <form
-          onSubmit={(e) => this.handleSumbit(e) }
-          className="container"
-          ref={this.form}
-          style={{maxWidth: 300}}
-          >
-          <div className="row justify-content-between align-items-start">
-            <div className="col-8">
-              <h2>Dirección</h2>
+    setFetchingZipCodeRelatedData(true)
+    setAddress({
+      ...address,
+      zipcode: zipcode,
+      neighborhood: neighborhood,
+      country: country.name,
+    })
+  }
+
+  const handleStreetChange = (street) => {
+    setAddress({
+      ...address,
+      street: street
+    })
+  }
+
+  const handleExtNumChange = (ext_num) => {
+    setAddress({
+      ...address,
+      ext_num: ext_num
+    })
+  }
+
+  const handleIntNumChange = (int_num) => {
+    setAddress({
+      ...address,
+      int_num: int_num
+    })
+  }
+
+  const postAddress = () => {
+    const requestOptions = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+      },
+      body: JSON.stringify(address)
+    }
+
+    fetch('/v1/addresses', requestOptions)
+      .then(async response => {
+        const data = await response.json()
+
+        if (response.status !== 200) return Promise.reject(data)
+
+        setAddress({
+          ...address,
+          ...data
+        })
+
+        setErrors({})
+      })
+      .catch(errors => {
+        setErrors(errors)
+      })
+
+  }
+
+  const handleSumbit = (e) => {
+    e.preventDefault()
+    setErrors({})
+    postAddress()
+  }
+
+  useEffect(()=>{
+    if (!fetchingZipCodeRelatedData) return false
+
+    fetchNeighborhoods(address.country, address.zipcode)
+  }, [address]) // handleZipCodeChange
+
+  useEffect(()=>{
+    fetchCountries()
+    fetchAddress()
+  }, [])
+
+  const availableNeighborhoods = neighborhoods.length > 0
+  return (
+    <React.Fragment>
+      <form
+        onSubmit={(e) => handleSumbit(e) }
+        className="container"
+        style={{maxWidth: 300}}
+        >
+        <div className="row justify-content-between align-items-start">
+          <div className="col-8">
+            <h2>Dirección</h2>
+          </div>
+          <div className="col-4">
+            <select
+              required
+              alt={errors.country || 'País'}
+              className={`form-select mb-3 ${errors.country && 'is-invalid'}`}>
+              {
+                countries.length ? countries.map((country, i) =>
+                (<option value={country.id} key={country.id} style={{backgroundImage: `url(${country.flagUrl})`}}>
+                  {country.name}
+                </option>)) :
+                (<option>Cargando países</option>)
+              }
+            </select>
+          </div>
+        </div>
+        <div className="row">
+          <div className="col">
+            <div className="input-group mb-3">
+              <input type="text" required placeholder="Calle" aria-label="Calle"
+                className={`form-control ${errors.street && 'is-invalid'}`}
+                alt={errors.street || 'Calle'}
+                value={ address.street }
+                onChange={(e) => handleStreetChange(e.target.value) } />
+              <input type="text" required placeholder="Número exterior" aria-label="Número exterior"
+                className={`form-control ${errors.num_ext && 'is-invalid'}`}
+                alt={errors.num_ext || 'Número exterior'}
+                value={ address.ext_num }
+                onChange={(e) => handleExtNumChange(e.target.value) } />
+              <input type="text" required placeholder="Número interior" aria-label="Número interior"
+                className={`form-control ${errors.num_int && 'is-invalid'}`}
+                alt={errors.num_int || 'Número interior'}
+                value={ address.int_num }
+                onChange={(e) => handleIntNumChange(e.target.value) } />
+              { (errors.street || errors.ext_num) &&
+                <div className="invalid-tooltip">{[errors.street, errors.ext_num].join(', ')}</div>
+              }
             </div>
-            <div className="col-4">
+          </div>
+        </div>
+        <div className="row">
+          <div className="col">
+            <div className="input-group mb-3">
+              <span className="input-group-text">CP</span>
+              <input
+                required
+                type="text"
+                className={`form-control ${errors.zipcode && 'is-invalid'}`}
+                placeholder="64000"
+                aria-label="Código postal"
+                alt={errors.zipcode || 'Código postal'}
+                disabled={fetchingZipCodeRelatedData}
+                onChange={(e) => handleZipCodeChange(e.target.value) }
+                value={ address.zipcode } />
               <select
                 required
-                alt={this.state.errors.country || 'País'}
-                className={`form-select mb-3 ${this.state.errors.country && 'is-invalid'}`}>
+                className={`form-control ${errors.neighborhood && 'is-invalid'}`}
+                alt={errors.neighborhood || 'Colonia'}
+                disabled={!availableNeighborhoods}
+                onChange={(e) => handleNeighborhoodChange(e.target.value) } >
                 {
-                  this.state.countries.length ? this.state.countries.map((country, i) =>
-                  (<option value={country.id} key={country.id} style={{backgroundImage: `url(${country.flagUrl})`}}>
-                    {country.name}
-                  </option>)) :
-                  (<option>Cargando países</option>)
+                  availableNeighborhoods ? neighborhoods.map(neighborhood =>
+                    (<option value={neighborhood} key={neighborhood}>
+                      {neighborhood}
+                    </option>))
+                  :
+                    (<option>Colonia</option>)
                 }
               </select>
+              { (errors.zipcode || errors.neighborhood) &&
+                <div className="invalid-tooltip">{[errors.zipcode, errors.neighborhood].join(', ')}</div>
+              }
             </div>
           </div>
-          <div className="row">
-            <div className="col">
-              <div className="input-group mb-3">
-                <input type="text" required placeholder="Calle" aria-label="Calle"
-                  className={`form-control ${this.state.errors.street && 'is-invalid'}`}
-                  alt={this.state.errors.street || 'Calle'}
-                  value={ this.state.address.street }
-                  onChange={(e) => this.handleStreetChange(e.target.value) } />
-                <input type="text" required placeholder="Número exterior" aria-label="Número exterior"
-                  className={`form-control ${this.state.errors.num_ext && 'is-invalid'}`}
-                  alt={this.state.errors.num_ext || 'Número exterior'}
-                  value={ this.state.address.ext_num }
-                  onChange={(e) => this.handleExtNumChange(e.target.value) } />
-                <input type="text" required placeholder="Número interior" aria-label="Número interior"
-                  className={`form-control ${this.state.errors.num_int && 'is-invalid'}`}
-                  alt={this.state.errors.num_int || 'Número interior'}
-                  value={ this.state.address.int_num }
-                  onChange={(e) => this.handleIntNumChange(e.target.value) } />
-                { (this.state.errors.street || this.state.errors.ext_num) &&
-                  <div className="invalid-tooltip">{[this.state.errors.street, this.state.errors.ext_num].join(', ')}</div>
-                }
-              </div>
-            </div>
-          </div>
-          <div className="row">
-            <div className="col">
-              <div className="input-group mb-3">
-                <span className="input-group-text">CP</span>
-                <input
-                  required
-                  type="text"
-                  className={`form-control ${this.state.errors.zipcode && 'is-invalid'}`}
-                  placeholder="64000"
-                  aria-label="Código postal"
-                  alt={this.state.errors.zipcode || 'Código postal'}
-                  disabled={this.state.fetchingZipCodeRelatedData}
-                  onChange={(e) => this.handleZipCodeChange(e.target.value) }
-                  value={ this.state.address.zipcode } />
-                <select
-                  required
-                  className={`form-control ${this.state.errors.neighborhood && 'is-invalid'}`}
-                  alt={this.state.errors.neighborhood || 'Colonia'}
-                  disabled={!availableNeighborhoods}
-                  onChange={(e) => this.handleNeighborhoodChange(e.target.value) } >
+        </div>
+        <div className="row">
+          <div className="col">
+            <figure className="text-end">
+              <figcaption className="blockquote-footer">
+                <cite title={`${address.city}, ${address.state}`}>
                   {
-                    availableNeighborhoods ? this.state.neighborhoods.map(neighborhood =>
-                      (<option value={neighborhood} key={neighborhood}>
-                        {neighborhood}
-                      </option>))
-                    :
-                      (<option>Colonia</option>)
+                    address.zipcode && address.neighborhood ?
+                    `${address.city}, ${address.state}` :
+                    fetchingZipCodeRelatedData ?
+                    'Obteniendo colonias' :
+                    'Introduce un código postal válido'
                   }
-                </select>
-                { (this.state.errors.zipcode || this.state.errors.neighborhood) &&
-                  <div className="invalid-tooltip">{[this.state.errors.zipcode, this.state.errors.neighborhood].join(', ')}</div>
-                }
-              </div>
-            </div>
+                </cite>
+              </figcaption>
+            </figure>
           </div>
-          <div className="row">
-            <div className="col">
-              <figure className="text-end">
-                <figcaption className="blockquote-footer">
-                  <cite title={`${this.state.address.city}, ${this.state.address.state}`}>
-                    {
-                      this.state.address.zipcode && this.state.address.neighborhood ?
-                      `${this.state.address.city}, ${this.state.address.state}` :
-                      this.state.fetchingZipCodeRelatedData ?
-                      'Obteniendo colonias' :
-                      'Introduce un código postal válido'
-                    }
-                  </cite>
-                </figcaption>
-              </figure>
-            </div>
+        </div>
+        <div className="row justify-content-center">
+          <div className="col-auto">
+            <button type="submit" className="btn btn-primary">Guardar</button>
           </div>
-          <div className="row justify-content-center">
-            <div className="col-auto">
-              <button type="submit" className="btn btn-primary">Guardar</button>
-            </div>
+        </div>
+        {!!Object.entries(errors).length && <div className="row">
+          <div className="alert alert-danger" role="alert">
+            <ul>
+              {
+                Object.entries(errors).map(([key, error], i) =>
+                  (<li key={i}>
+                    {key}: {error}
+                  </li>))
+              }
+            </ul>
           </div>
-          {!!Object.entries(this.state.errors).length && <div className="row">
-            <div className="alert alert-danger" role="alert">
-              <ul>
-                {
-                  Object.entries(this.state.errors).map(([key, error], i) =>
-                    (<li key={i}>
-                      {key}: {error}
-                    </li>))
-                }
-              </ul>
-            </div>
-          </div>}
-        </form>
-        <ul>
-          <li>id: { this.state.address.id }</li>
-          <li>street: { this.state.address.street }</li>
-          <li>ext_num: { this.state.address.ext_num }</li>
-          <li>int_num: { this.state.address.int_num }</li>
-          <li>zipcode: { this.state.address.zipcode }</li>
-          <li>neighborhood: { this.state.address.neighborhood }</li>
-          <li>city: { this.state.address.city }</li>
-          <li>state: { this.state.address.state }</li>
-          <li>country: { this.state.address.country }</li>
-          <li>errors: { JSON.stringify(this.state.errors) }</li>
-        </ul>
-      </React.Fragment>
-    )
-  }
-}
-
-AddressForm.prototypes = {
-  address: PropTypes.object,
-  countries: PropTypes.array
+        </div>}
+      </form>
+      <ul>
+        <li>id: { address.id }</li>
+        <li>street: { address.street }</li>
+        <li>ext_num: { address.ext_num }</li>
+        <li>int_num: { address.int_num }</li>
+        <li>zipcode: { address.zipcode }</li>
+        <li>neighborhood: { address.neighborhood }</li>
+        <li>city: { address.city }</li>
+        <li>state: { address.state }</li>
+        <li>country: { address.country }</li>
+        <li>errors: { JSON.stringify(errors) }</li>
+      </ul>
+    </React.Fragment>
+  )
 }
 
 export default AddressForm
