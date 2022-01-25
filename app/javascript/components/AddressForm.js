@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react"
 import { useParams } from "react-router-dom"
+import useDebounce from './use-debounce'
 
 function AddressForm(props) {
   const params = useParams()
@@ -18,6 +19,8 @@ function AddressForm(props) {
     state: '',
     country: '',
   })
+
+  const debouncedZipcode = useDebounce(address.zipcode, 500)
 
   const fetchAddress = () => {
     const id = address.id
@@ -47,22 +50,12 @@ function AddressForm(props) {
       })
   }
 
-  const fetchNeighborhoods = (country, zipcode) => {
-    setFetchingZipCodeRelatedData(true)
-
-    fetch(`/v1/addresses/neighborhoods?country=${country}&zipcode=${zipcode}`)
+  const fetchNeighborhoods = async (country, zipcode) => {
+    return fetch(`/v1/addresses/neighborhoods?country=${country}&zipcode=${zipcode}`)
       .then(response => response.json())
-      .then(data => {
-        const fetchedNeighborhoods = data.neighborhoods || []
-
-        setNeighborhoods(fetchedNeighborhoods)
-        setFetchingZipCodeRelatedData(false)
-        setAddress({
-          ...address,
-          neighborhood: fetchedNeighborhoods[0],
-          state: data.state,
-          city: data.city
-        })
+      .catch(error => {
+        console.error(error)
+        return []
       })
   }
 
@@ -75,15 +68,14 @@ function AddressForm(props) {
   }
 
   const handleZipCodeChange = (zipcode) => {
-    const country = countries.find(country => country.name === address.country) || countries[0]
-    const neighborhood = neighborhoods.find(neighborhood => neighborhood === address.neighborhood) || neighborhoods[0] || ''
+    if (zipcode.length > 0) setFetchingZipCodeRelatedData(true)
 
-    setFetchingZipCodeRelatedData(true)
+    setNeighborhoods([])
     setAddress({
       ...address,
       zipcode: zipcode,
-      neighborhood: neighborhood,
-      country: country.name,
+      neighborhood: '',
+      state: ''
     })
   }
 
@@ -144,15 +136,38 @@ function AddressForm(props) {
   }
 
   useEffect(()=>{
-    if (!fetchingZipCodeRelatedData) return false
-
-    fetchNeighborhoods(address.country, address.zipcode)
-  }, [address]) // handleZipCodeChange
-
-  useEffect(()=>{
     fetchCountries()
     fetchAddress()
   }, [])
+
+  useEffect(
+    () => {
+      if (debouncedZipcode) {
+        setFetchingZipCodeRelatedData(true)
+        fetchNeighborhoods(address.country, debouncedZipcode).then(data => {
+          const fetchedNeighborhoods = data.neighborhoods || []
+          setNeighborhoods(fetchedNeighborhoods)
+          setAddress({
+            ...address,
+            neighborhood: fetchedNeighborhoods[0],
+            state: data.state,
+            city: data.city
+          })
+          setFetchingZipCodeRelatedData(false)
+        })
+      } else {
+        setFetchingZipCodeRelatedData(false)
+        setNeighborhoods([])
+        setAddress({
+          ...address,
+          neighborhood: '',
+          state: '',
+          city: ''
+        })
+      }
+    },
+    [debouncedZipcode]
+  )
 
   const availableNeighborhoods = neighborhoods.length > 0
   return (
@@ -216,7 +231,6 @@ function AddressForm(props) {
                 placeholder="64000"
                 aria-label="Código postal"
                 alt={errors.zipcode || 'Código postal'}
-                disabled={fetchingZipCodeRelatedData}
                 onChange={(e) => handleZipCodeChange(e.target.value) }
                 value={ address.zipcode } />
               <select
@@ -230,8 +244,9 @@ function AddressForm(props) {
                     (<option value={neighborhood} key={neighborhood}>
                       {neighborhood}
                     </option>))
-                  :
-                    (<option>Colonia</option>)
+                  : fetchingZipCodeRelatedData ?
+                    (<option>Cargando...</option>)
+                  : (<option>Colonia</option>)
                 }
               </select>
               { (errors.zipcode || errors.neighborhood) &&
@@ -242,19 +257,23 @@ function AddressForm(props) {
         </div>
         <div className="row">
           <div className="col">
-            <figure className="text-end">
-              <figcaption className="blockquote-footer">
-                <cite title={`${address.city}, ${address.state}`}>
-                  {
-                    address.zipcode && address.neighborhood ?
-                    `${address.city}, ${address.state}` :
-                    fetchingZipCodeRelatedData ?
-                    'Obteniendo colonias' :
-                    'Introduce un código postal válido'
-                  }
-                </cite>
-              </figcaption>
-            </figure>
+            {
+              fetchingZipCodeRelatedData ?
+              <div className="spinner-grow spinner-grow-sm float-end" role="status">
+                <span className="visually-hidden">Obteniendo colonias</span>
+              </div> :
+              <figure className="text-end">
+                <figcaption className="blockquote-footer">
+                  <cite title={`${address.city}, ${address.state}`}>
+                    {
+                      address.zipcode && address.neighborhood ?
+                      `${address.city}, ${address.state}` :
+                      'Introduce un código postal válido'
+                    }
+                  </cite>
+                </figcaption>
+              </figure>
+            }
           </div>
         </div>
         <div className="row justify-content-center">
