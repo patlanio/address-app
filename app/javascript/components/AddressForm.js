@@ -33,7 +33,6 @@ function AddressForm(props) {
           ...address,
           ...data
         })
-        // fetchNeighborhoods(data.country, data.zipcode)
       })
   }
 
@@ -43,10 +42,6 @@ function AddressForm(props) {
       .then(data => {
         const countries = data || []
         setCountries(countries)
-        setAddress({
-          ...address,
-          country: countries[0].name
-        })
       })
   }
 
@@ -54,7 +49,6 @@ function AddressForm(props) {
     return fetch(`/v1/addresses/neighborhoods?country=${country}&zipcode=${zipcode}`)
       .then(response => response.json())
       .catch(error => {
-        console.error(error)
         return []
       })
   }
@@ -139,6 +133,15 @@ function AddressForm(props) {
     fetchCountries()
     fetchAddress()
   }, [])
+
+  useEffect(()=>{
+    if (countries.length === 0) return
+
+    setAddress({
+      ...address,
+      country: countries[0].name
+    })
+  }, [countries])
 
   useEffect(
     () => {
