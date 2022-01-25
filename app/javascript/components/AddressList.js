@@ -49,7 +49,11 @@ class AddressList extends React.Component {
           availableAddresses ? this.state.addresses.map(address =>
             (<tr key={address.id}>
               <th scope="row">{address.id}</th>
-              <td>{`${address.street} ${address.ext_num} ${address.int_num}`}</td>
+              <td>
+                <Link to={`address/${address.id}`}>
+                  {`${address.street} ${address.ext_num} ${address.int_num}`}
+                </Link>
+              </td>
               <td>{address.neighborhood}</td>
               <td>{address.zipcode}</td>
               <td>{address.city}</td>
