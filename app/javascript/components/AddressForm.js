@@ -7,11 +7,32 @@ class AddressForm extends React.Component {
 
     this.state = {
       neighborhoods: [],
+      countries: [],
       address: {},
       errors: {},
       fetchingZipCodeRelatedData: false,
       ...props
     }
+  }
+
+  componentWillMount() {
+    this.fetchCountries()
+  }
+
+  fetchCountries() {
+    fetch(`/v1/countries/`)
+      .then(response => response.json())
+      .then(data => {
+        const countries = data || []
+
+        this.setState(state => ({
+          countries: countries,
+          address: {
+            ...state.address,
+            country: countries[0].name
+          }
+        }))
+      })
   }
 
   fetchNeighborhoods(country, zipcode) {
@@ -138,10 +159,12 @@ class AddressForm extends React.Component {
                 required
                 alt={this.state.errors.country || 'País'}
                 className={`form-select mb-3 ${this.state.errors.country && 'is-invalid'}`}>
-                {this.state.countries.map((country, i) =>
+                {
+                  this.state.countries.length ? this.state.countries.map((country, i) =>
                   (<option value={country.id} key={country.id} style={{backgroundImage: `url(${country.flagUrl})`}}>
                     {country.name}
-                  </option>))
+                  </option>)) :
+                  (<option>Cargando países</option>)
                 }
               </select>
             </div>
