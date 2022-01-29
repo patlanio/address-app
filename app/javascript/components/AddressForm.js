@@ -118,6 +118,10 @@ function AddressForm(props) {
       .then(data => {
         const countries = data || []
         setCountries(countries)
+        setAddress({
+          ...address,
+          country: countries[0]
+        })
       })
   }
 
@@ -245,7 +249,7 @@ function AddressForm(props) {
               className={`form-select mb-3 ${errors.country && 'is-invalid'}`}>
               {
                 countries.length ? countries.map((country, i) =>
-                (<option value={country.id} key={country.id} style={{backgroundImage: `url(${country.flagUrl})`}}>
+                (<option value={country.name} key={country.id} style={{backgroundImage: `url(${country.flagUrl})`}}>
                   {country.name}
                 </option>)) :
                 (<option>Cargando países</option>)
