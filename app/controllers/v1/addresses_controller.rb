@@ -9,7 +9,7 @@ class V1::AddressesController < ApplicationController
   end
 
   def show
-    render json: @address
+    render jsonapi: @address
   end
 
   def create
