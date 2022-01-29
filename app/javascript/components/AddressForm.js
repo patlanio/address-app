@@ -182,6 +182,13 @@ function AddressForm(props) {
     action()
   }
 
+  const handleCountryChange = (e) => {
+    setAddress({
+      ...address,
+      country: e.target.value
+    })
+  }
+
   const handleDelete = (e) => {
     e.preventDefault()
     setErrors({})
@@ -248,7 +255,9 @@ function AddressForm(props) {
           <div className="col-4">
             <select
               required
+              onChange={(e) => handleCountryChange(e) }
               alt={errors.country || 'País'}
+              value={address.country}
               className={`form-select mb-3 ${errors.country && 'is-invalid'}`}>
               {
                 countries.length ? countries.map((country, i) =>
