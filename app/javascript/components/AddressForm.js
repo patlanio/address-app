@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react"
-import { useParams } from "react-router-dom"
+import { useParams, Navigate } from "react-router-dom"
 import useDebounce from './use-debounce'
 
 function AddressForm(props) {
@@ -8,6 +8,9 @@ function AddressForm(props) {
   const [countries, setCountries] = useState([])
   const [errors, setErrors] = useState({})
   const [fetchingZipCodeRelatedData, setFetchingZipCodeRelatedData] = useState(false)
+  const [redirectToHome, setRedirectToHome] = useState(false)
+  const [redirectToShow, setRedirectToShow] = useState(0)
+
   const [address, setAddress] = useState({
     id: params.addressId,
     street: '',
@@ -39,12 +42,7 @@ function AddressForm(props) {
       const data = await response.json()
       if (response.status < 200 && response.status >= 300) return Promise.reject(data)
 
-      setAddress({
-        ...address,
-        ...data
-      })
-      setErrors({})
-      console.log("Guardardo correcto", data)
+      setRedirectToShow(data.id)
     })
     .catch(errors => {
       setErrors(errors)
@@ -69,6 +67,7 @@ function AddressForm(props) {
           ...data
         })
         setErrors({})
+        setRedirectToHome(true)
       })
       .catch(errors => {
         setErrors(errors)
@@ -85,6 +84,7 @@ function AddressForm(props) {
     fetch(`/v1/addresses/${address.id}`, requestOptions)
       .then(async response => {
         if (response.status < 200 && response.status >= 300) return Promise.reject()
+        setRedirectToHome(true)
       })
       .catch(() => {
         // setErrors(errors)
@@ -109,6 +109,7 @@ function AddressForm(props) {
       })
       .catch(errors => {
         console.error('Cant get address', id, ': ', errors)
+        setRedirectToHome(true)
       })
   }
 
@@ -233,6 +234,8 @@ function AddressForm(props) {
   const availableNeighborhoods = neighborhoods.length > 0
   return (
     <React.Fragment>
+      { redirectToHome && <Navigate to="/" /> }
+      { !!redirectToShow && <Navigate to={`/address/${redirectToShow}`} /> }
       <form
         onSubmit={(e) => handleSumbit(e) }
         className="container"
