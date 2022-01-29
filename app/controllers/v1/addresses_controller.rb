@@ -5,7 +5,7 @@ class V1::AddressesController < ApplicationController
 
   def index
     @addresses = Address.all
-    render json: @addresses
+    render jsonapi: @addresses
   end
 
   def show

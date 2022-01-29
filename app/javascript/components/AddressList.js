@@ -14,8 +14,9 @@ class AddressList extends React.Component {
     fetch(`/v1/addresses/`)
       .then(response => response.json())
       .then(data => {
+        const addresses = data.data.map((a) => { return {id: a.id, ...a.attributes} }) || []
         this.setState(state => ({
-          addresses: data || []
+          addresses: addresses
         }))
       })
   }
