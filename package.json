@@ -1,5 +1,5 @@
 {
-  "name": "hatch-app",
+  "name": "address-app",
   "private": true,
   "dependencies": {
     "@babel/preset-react": "^7.16.7",
