@@ -20,6 +20,17 @@ class NeighborhoodsService
     }
   end
 
+  def self.brasil(zipcode)
+    br = Country.find_by_name('Brasil')
+    data = HTTParty.get("#{br.postalApiUrl}#{zipcode}").parsed_response
+
+    {
+      city: data['city'],
+      state: data['state'],
+      neighborhoods: [data['neighborhood']]
+    }
+  end
+
   def self.get_request(url, query)
     HTTParty.get(
       url,
