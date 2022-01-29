@@ -117,7 +117,8 @@ function AddressForm(props) {
     fetch(`/v1/countries/`)
       .then(response => response.json())
       .then(data => {
-        const countries = data || []
+        const countries = data.data.map((c) => { return {id: c.id, ...c.attributes} }) || []
+
         setCountries(countries)
         setAddress({
           ...address,
