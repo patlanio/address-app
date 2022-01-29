@@ -3,6 +3,6 @@
 class V1::CountriesController < ApplicationController
   def index
     @countries = Country.all
-    render json: @countries
+    render jsonapi: @countries
   end
 end
