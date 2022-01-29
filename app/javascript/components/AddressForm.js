@@ -22,6 +22,75 @@ function AddressForm(props) {
 
   const debouncedZipcode = useDebounce(address.zipcode, 500)
 
+  const REQUEST_HEADERS = {
+    'Content-Type': 'application/json',
+    'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+  }
+
+  const postAddress = () => {
+    const requestOptions = {
+      method: 'POST',
+      headers: REQUEST_HEADERS,
+      body: JSON.stringify(address)
+    }
+
+    fetch('/v1/addresses', requestOptions)
+    .then(async response => {
+      const data = await response.json()
+      if (response.status < 200 && response.status >= 300) return Promise.reject(data)
+
+      setAddress({
+        ...address,
+        ...data
+      })
+      setErrors({})
+      console.log("Guardardo correcto", data)
+    })
+    .catch(errors => {
+      setErrors(errors)
+    })
+  }
+
+  const updateAddress = () => {
+    const requestOptions = {
+      method: 'PUT',
+      headers: REQUEST_HEADERS,
+      body: JSON.stringify(address)
+    }
+
+    fetch(`/v1/addresses/${address.id}`, requestOptions)
+      .then(async response => {
+        const data = await response.json()
+
+        if (response.status < 200 && response.status >= 300) return Promise.reject(data)
+
+        setAddress({
+          ...address,
+          ...data
+        })
+        setErrors({})
+      })
+      .catch(errors => {
+        setErrors(errors)
+      })
+  }
+
+  const deleteAddress = () => {
+    const requestOptions = {
+      method: 'DELETE',
+      headers: REQUEST_HEADERS,
+      body: JSON.stringify(address)
+    }
+
+    fetch(`/v1/addresses/${address.id}`, requestOptions)
+      .then(async response => {
+        if (response.status < 200 && response.status >= 300) return Promise.reject()
+      })
+      .catch(() => {
+        // setErrors(errors)
+      })
+  }
+
   const fetchAddress = () => {
     const id = address.id
     if (!id) return
@@ -101,33 +170,11 @@ function AddressForm(props) {
     })
   }
 
-  const postAddress = () => {
-    const requestOptions = {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
-      },
-      body: JSON.stringify(address)
-    }
-
-    fetch('/v1/addresses', requestOptions)
-      .then(async response => {
-        const data = await response.json()
-
-        if (response.status !== 200) return Promise.reject(data)
-
-        setAddress({
-          ...address,
-          ...data
-        })
-
-        setErrors({})
-      })
-      .catch(errors => {
-        setErrors(errors)
-      })
-
+  const handleSumbit = (e) => {
+    e.preventDefault()
+    setErrors({})
+    const action = (params.addressId || address.id) ? updateAddress : postAddress
+    action()
   }
 
   const handleSumbit = (e) => {
