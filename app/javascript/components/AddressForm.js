@@ -86,7 +86,7 @@ function AddressForm(props) {
         if (response.status < 200 && response.status >= 300) return Promise.reject()
         setRedirectToHome(true)
       })
-      .catch(() => {
+      .catch((errors) => {
         // setErrors(errors)
       })
   }
@@ -97,7 +97,11 @@ function AddressForm(props) {
 
     fetch(`/v1/addresses/${id}`, {method: 'GET'})
       .then(async response => {
-        const data = await response.json()
+        let data = await response.json()
+        data = {
+          id: data.data.id,
+          ...data.data.attributes
+        }
 
         if (response.status < 200 && response.status >= 300 || !data.id)
           return Promise.reject(data)
@@ -122,7 +126,7 @@ function AddressForm(props) {
         setCountries(countries)
         setAddress({
           ...address,
-          country: countries[0]
+          country: countries[0].code
         })
       })
   }
@@ -206,7 +210,7 @@ function AddressForm(props) {
 
     setAddress({
       ...address,
-      country: countries[0].name
+      country: countries[0].code
     })
   }, [countries])
 
@@ -262,8 +266,8 @@ function AddressForm(props) {
               className={`form-select mb-3 ${errors.country && 'is-invalid'}`}>
               {
                 countries.length ? countries.map((country, i) =>
-                (<option value={country.name} key={country.id} style={{backgroundImage: `url(${country.flagUrl})`}}>
-                  {country.name}
+                (<option value={country.code} alt={country.name} key={country.id} style={{backgroundImage: `url(${country.flagUrl})`}}>
+                  {country.code}
                 </option>)) :
                 (<option>Cargando países</option>)
               }
