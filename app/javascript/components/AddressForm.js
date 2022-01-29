@@ -177,10 +177,10 @@ function AddressForm(props) {
     action()
   }
 
-  const handleSumbit = (e) => {
+  const handleDelete = (e) => {
     e.preventDefault()
     setErrors({})
-    postAddress()
+    deleteAddress()
   }
 
   useEffect(()=>{
@@ -333,9 +333,12 @@ function AddressForm(props) {
             }
           </div>
         </div>
-        <div className="row justify-content-center">
-          <div className="col-auto">
-            <button type="submit" className="btn btn-primary">Guardar</button>
+        <div className="row justify-content-around">
+          <div className="col">
+            { address.id && <button onClick={(e) => handleDelete(e)} type="button" className="btn btn-light link-danger">Borrar</button> }
+          </div>
+          <div className="col">
+            <button type="submit" className="btn btn-primary float-end">Guardar</button>
           </div>
         </div>
         {!!Object.entries(errors).length && <div className="row">
