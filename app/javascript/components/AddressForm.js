@@ -27,12 +27,19 @@ function AddressForm(props) {
     if (!id) return
 
     fetch(`/v1/addresses/${id}`, {method: 'GET'})
-      .then(response => response.json())
-      .then(data => {
+      .then(async response => {
+        const data = await response.json()
+
+        if (response.status < 200 && response.status >= 300 || !data.id)
+          return Promise.reject(data)
+
         setAddress({
           ...address,
           ...data
         })
+      })
+      .catch(errors => {
+        console.error('Cant get address', id, ': ', errors)
       })
   }
 
@@ -131,7 +138,7 @@ function AddressForm(props) {
 
   useEffect(()=>{
     fetchCountries()
-    fetchAddress()
+    if (params.addressId || address.id) fetchAddress()
   }, [])
 
   useEffect(()=>{
