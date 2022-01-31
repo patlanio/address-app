@@ -1,0 +1,55 @@
+---
+http_interactions:
+- request:
+    method: get
+    uri: https://sepomex.razektheone.com/codigo_postal?cp=03000
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Apikey:
+      - "<MX_POSTALSERVICE_API_KEY>"
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Mon, 31 Jan 2022 08:56:20 GMT
+      Server:
+      - Apache
+      X-Powered-By:
+      - PHP/5.6.40
+      Access-Control-Allow-Origin:
+      - "*"
+      Access-Control-Allow-Credentials:
+      - 'true'
+      Access-Control-Allow-Methods:
+      - PUT, GET, POST, DELETE, OPTIONS
+      Access-Control-Allow-Headers:
+      - X-Requested-With, Content-Type, Apikey
+      P3p:
+      - CP="IDC DSP COR CURa ADMa OUR IND PHY ONL COM STA"
+      Upgrade:
+      - h2,h2c
+      Connection:
+      - Upgrade
+      Vary:
+      - Accept-Encoding
+      Content-Length:
+      - '221'
+      Content-Type:
+      - text/html;charset=UTF-8
+    body:
+      encoding: ASCII-8BIT
+      string: '{"error":false,"message":"Procesamiento correcto.","codigo_postal":{"estado_id":"09","municipio_id":"014","estado":"CIUDAD
+        DE MEXICO","estado_abreviatura":"CMX","municipio":"BENITO JUAREZ","centro_reparto":"03001","codigo_postal":"03000","colonias":[{"colonia_id":"311","colonia":"Piedad
+        Narvarte"}]}}'
+  recorded_at: Mon, 31 Jan 2022 08:55:29 GMT
+recorded_with: VCR 6.0.0

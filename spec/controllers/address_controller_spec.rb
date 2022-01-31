@@ -202,4 +202,39 @@ RSpec.describe V1::AddressesController, type: :controller do
       end
     end
   end
+
+  describe 'GET #neighborhoods', :vcr do
+    context 'with valid data' do
+      before do
+        create(:country)
+        get :neighborhoods, params: { country: 'Mexico', zipcode: '03000' }
+      end
+
+      it 'responds with ok status' do
+        expect(response).to have_http_status(:ok)
+      end
+
+      it 'returns neighborhoods, city and state data' do
+        expect(json_response).to eq({
+          state: 'CIUDAD DE MEXICO',
+          neighborhoods: ['Piedad Narvarte'],
+          city: 'BENITO JUAREZ'
+        })
+      end
+    end
+
+    context 'with invalid country' do
+      it 'returns default response' do
+        get :neighborhoods, params: { country: 'Narnia', zipcode: '64000' }
+        expect(json_response).to eq({ city: '', state: '', neighborhoods: [] })
+      end
+    end
+
+    context 'with invalid zipcode' do
+      it 'returns default response' do
+        get :neighborhoods, params: { country: 'Mexico', zipcode: 'INVALID_POSTAL_CODE' }
+        expect(json_response).to eq({ city: '', state: '', neighborhoods: [] })
+      end
+    end
+  end
 end
