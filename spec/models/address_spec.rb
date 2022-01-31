@@ -1,7 +1,9 @@
 require 'rails_helper'
 
 RSpec.describe Address, type: :model do
-  let(:mexico) { Country.create!(name: 'Mexico', postalApiUrl: 'https://flag.com/mx.png', flagUrl: 'https://flag.com') }
+  let(:mexico) { create(:country) }
+  let(:brasil) { create(:country, :brasil) }
+
   let(:address) do
     described_class.new(
       street: 'Juarez',
@@ -34,7 +36,10 @@ RSpec.describe Address, type: :model do
   it 'is invalid with blank zipcode' do
     address.zipcode = ''
     address.valid?
-    expect(address.errors[:zipcode]).to eq(["can't be blank"])
+    expect(address.errors[:zipcode]).to eq([
+      "can't be blank",
+      'is the wrong length (should be 5 characters)'
+    ])
   end
 
   it 'is invalid with blank neighborhood' do
@@ -63,5 +68,39 @@ RSpec.describe Address, type: :model do
 
   it 'is valid with valid attributes' do
     expect(address).to be_valid
+  end
+
+  context 'Mexico' do
+    it 'is Mexico with MX country code' do
+      address.country = mexico
+      expect(address.mexico?).to be_truthy
+    end
+
+    it 'is not Mexico with not MX country code' do
+      address.country = brasil
+      expect(address.mexico?).to be_falsey
+    end
+
+    it 'is invalid when zipcode length is not 5' do
+      address.zipcode = '123456'
+      expect(address.valid?).to be_falsey
+    end
+  end
+
+  context 'Brasil' do
+    it 'is Brasil with BR country code' do
+      address.country = brasil
+      expect(address.brasil?).to be_truthy
+    end
+
+    it 'is not Brasil with not BR country code' do
+      address.country = mexico
+      expect(address.brasil?).to be_falsey
+    end
+
+    it 'is invalid when zipcode length is not 8' do
+      address.zipcode = '1234567'
+      expect(address.valid?).to be_falsey
+    end
   end
 end

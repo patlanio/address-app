@@ -8,10 +8,10 @@ class Address < ApplicationRecord
   validates :zipcode, length: { is: 8 }, if: :brasil?
 
   def mexico?
-    country.code == 'MX'
+    country.present? && country.code == 'MX'
   end
 
   def brasil?
-    country.code == 'BR'
+    country.present? && country.code == 'BR'
   end
 end
