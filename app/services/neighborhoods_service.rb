@@ -8,9 +8,7 @@ class NeighborhoodsService
   end
 
   def self.mexico(zipcode)
-    mx = Country.find_by_name('Mexico')
-    params = { cp: zipcode }
-    response = get_request(mx.postalApiUrl, params)
+    response = mexico_request(zipcode)
     data = JSON.parse(response.parsed_response)['codigo_postal']
 
     {
@@ -31,15 +29,19 @@ class NeighborhoodsService
     }
   end
 
-  def self.get_request(url, query)
+  def self.mexico_request(zipcode)
+    mx = Country.find_by_name('Mexico')
     HTTParty.get(
-      url,
+      mx.postalApiUrl,
       {
-        query: query,
+        query: { cp: zipcode },
         headers: {
-          apiKey: ''
+          apiKey: ENV['MX_POSTALSERVICE_API_KEY']
         }
       }
     )
   end
+
+  singleton_class.send(:alias_method, :mx, :mexico)
+  singleton_class.send(:alias_method, :br, :brasil)
 end
