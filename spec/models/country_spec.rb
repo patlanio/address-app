@@ -1,13 +1,7 @@
 require 'rails_helper'
 
 RSpec.describe Country, type: :model do
-  let(:country) do
-    described_class.new(
-      name: 'Mexico',
-      flagUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fc/Flag_of_Mexico.svg/200px-Flag_of_Mexico.svg.png',
-      postalApiUrl: 'https://api-sepomex.hckdrk.mx'
-    )
-  end
+  let(:country) { create(:country) }
 
   it 'is invalid without valid attributes' do
     expect(described_class.new).not_to be_valid
@@ -45,5 +39,23 @@ RSpec.describe Country, type: :model do
 
   it 'is valid with valid attributes' do
     expect(country).to be_valid
+  end
+
+  it 'is uniq through name' do
+    new_country = described_class.new(name: country.name, code: 'ZZ')
+    new_country.valid?
+    expect(new_country.errors[:name]).to eq(['has already been taken'])
+  end
+
+  it 'is uniq through code' do
+    new_country = described_class.new(code: country.code, name: 'Hoenn')
+    new_country.valid?
+    expect(new_country.errors[:code]).to eq(['has already been taken'])
+  end
+
+  it 'is invalid when code length is not 2' do
+    country.code = 'USA'
+    country.valid?
+    expect(country.errors[:code]).to eq(['is the wrong length (should be 2 characters)'])
   end
 end
