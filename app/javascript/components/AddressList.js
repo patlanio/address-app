@@ -1,72 +1,49 @@
-import React from "react"
-import { Link } from 'react-router-dom'
+import React, { useState, useEffect } from "react"
+import AddressCard from './address/AddressCard'
 
-class AddressList extends React.Component {
-  constructor(props) {
-    super(props)
+function AddressList(props) {
+  const [addresses, setAddresses] = useState([])
+  const [fetchingAddresses, setFetchingAddresses] = useState(false)
 
-    this.state = {
-      addresses: []
-    }
-  }
-
-  fetchAddresses() {
+  const fetchAddresses = () => {
+    setFetchingAddresses(true)
     fetch(`/v1/addresses/`)
       .then(response => response.json())
       .then(data => {
-        const addresses = data.data.map((a) => { return {id: a.id, ...a.attributes} }) || []
-        this.setState(state => ({
-          addresses: addresses
-        }))
+        const addresses = data.data.map((a) => { return {id: parseInt(a.id), ...a.attributes} }) || []
+        setAddresses(addresses)
+        setFetchingAddresses(false)
+      })
+      .catch(errors => {
+        setFetchingAddresses(false)
       })
   }
 
-  componentWillMount() {
-    this.fetchAddresses()
-  }
+  useEffect(()=>{
+    fetchAddresses()
+  }, [])
 
-  render() {
-    const availableAddresses = this.state.addresses.length > 0
-
-    return (<table className="table table-hover">
-      <thead>
-        <tr>
-          <th scope="col">ID</th>
-          <th scope="col">Address</th>
-          <th scope="col">Neighborhood</th>
-          <th scope="col">Zipcode</th>
-          <th scope="col">City</th>
-          <th scope="col">State</th>
-          <th scope="col">Country</th>
-          <th scope="col">
-            <Link to="/new">
-              <button type="button" className="btn btn-primary">Nueva</button>
-            </Link>
-          </th>
-        </tr>
-      </thead>
-      <tbody>
+  const availableAddresses = addresses.length > 0
+  return (
+    <div className="container p-4">
+      <div className={`row ${fetchingAddresses ? 'justify-content-center' : 'row-cols-1 row-cols-md-2 row-cols-lg-3' }`}>
         {
-          availableAddresses ? this.state.addresses.map(address =>
-            (<tr key={address.id}>
-              <th scope="row">{address.id}</th>
-              <td>
-                <Link to={`address/${address.id}`}>
-                  {`${address.street} ${address.ext_num} ${address.int_num}`}
-                </Link>
-              </td>
-              <td>{address.neighborhood}</td>
-              <td>{address.zipcode}</td>
-              <td>{address.city}</td>
-              <td>{address.state}</td>
-              <td>{address.country}</td>
-            </tr>))
+          availableAddresses ? addresses.map(address =>
+            (<div className="col mb-4">
+              <AddressCard key={address.id} {...address} />
+            </div>))
+          : fetchingAddresses ?
+            (<div className="col-auto">
+              <div className="spinner-border" role="status" style={{width: '4rem', height: '4rem'}}>
+                <span className="visually-hidden">Loading...</span>
+              </div>
+            </div>)
           :
-            (<tr><td>No hay direcciones</td></tr>)
+            (<div className="col"><h1>No addresses yet</h1></div>)
         }
-      </tbody>
-    </table>)
-  }
+      </div>
+    </div>
+  )
 }
 
 export default AddressList
