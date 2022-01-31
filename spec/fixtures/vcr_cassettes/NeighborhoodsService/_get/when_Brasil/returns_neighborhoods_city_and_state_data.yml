@@ -1,0 +1,66 @@
+---
+http_interactions:
+- request:
+    method: get
+    uri: https://brasilapi.com.br/api/cep/v2/89010025
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Mon, 31 Jan 2022 08:31:35 GMT
+      Content-Type:
+      - application/json; charset=utf-8
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      X-Matched-Path:
+      - "/api/cep/v2/[cep]"
+      Cache-Control:
+      - max-age=0, public
+      Access-Control-Allow-Origin:
+      - "*"
+      Access-Control-Allow-Credentials:
+      - 'true'
+      Etag:
+      - W/"e7-BjkJ9ox4ogUYJe2Zfn0RakxHhxA"
+      X-Vercel-Cache:
+      - HIT
+      Age:
+      - '1648'
+      X-Vercel-Id:
+      - iad1::sfo1::mhhhn-1643617895074-a92c15b4ac33
+      Strict-Transport-Security:
+      - max-age=63072000
+      Cf-Cache-Status:
+      - DYNAMIC
+      Expect-Ct:
+      - max-age=604800, report-uri="https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct"
+      Report-To:
+      - '{"endpoints":[{"url":"https:\/\/a.nel.cloudflare.com\/report\/v3?s=rKhWACFXKYBpYqej9kkpfkBRiYPgL8pCYRFZfhVXElpnf867hQgPlumK%2FjhcwHVinIFqo%2BskeUett3q86kXXNYi1HPPdxZxtLjIxCuPIN%2BGUbn1llV46wyCeCAj0h5OwUI8s"}],"group":"cf-nel","max_age":604800}'
+      Nel:
+      - '{"success_fraction":0,"report_to":"cf-nel","max_age":604800}'
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - 6d6195a3edb51080-ATL
+      Alt-Svc:
+      - h3=":443"; ma=86400, h3-29=":443"; ma=86400
+    body:
+      encoding: ASCII-8BIT
+      string: '{"cep":"89010025","state":"SC","city":"Blumenau","neighborhood":"Centro","street":"Rua
+        Doutor Luiz de Freitas Melro","service":"viacep","location":{"type":"Point","coordinates":{"longitude":"-49.0629788","latitude":"-26.9244749"}}}'
+  recorded_at: Mon, 31 Jan 2022 08:30:43 GMT
+recorded_with: VCR 6.0.0
