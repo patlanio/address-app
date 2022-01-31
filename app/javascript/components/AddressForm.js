@@ -224,9 +224,9 @@ function AddressForm(props) {
         const currentNeighborhood = fetchedNeighborhoods.find(n => n === address.neighborhood)
         setAddress({
           ...address,
-          neighborhood: currentNeighborhood || fetchedNeighborhoods[0],
-          state: data.state,
-          city: data.city
+          neighborhood: currentNeighborhood || fetchedNeighborhoods[0] || '',
+          state: data.state || '',
+          city: data.city || ''
         })
         setFetchingZipCodeRelatedData(false)
       })
@@ -272,7 +272,7 @@ function AddressForm(props) {
       { !!redirectToShow && <Navigate to={`/address/${redirectToShow}`} /> }
       <form
         onSubmit={(e) => handleSumbit(e) }
-        className="container"
+        className="container card p-4 my-4"
         style={{maxWidth: 300}}
         >
         <div className="row justify-content-between align-items-start">
@@ -336,7 +336,7 @@ function AddressForm(props) {
               <select
                 required
                 className={`form-control ${errors.neighborhood && 'is-invalid'}`}
-                alt={errors.neighborhood || 'Colonia'}
+                alt={errors.neighborhood || 'Neighborhood'}
                 value={address.neighborhood}
                 disabled={!availableNeighborhoods}
                 onChange={(e) => handleNeighborhoodChange(e.target.value) } >
@@ -346,8 +346,8 @@ function AddressForm(props) {
                       {neighborhood}
                     </option>))
                   : fetchingZipCodeRelatedData ?
-                    (<option>Cargando...</option>)
-                  : (<option>Colonia</option>)
+                    (<option>Loading...</option>)
+                  : (<option>Neighborhood</option>)
                 }
               </select>
               { (errors.zipcode || errors.neighborhood) &&
@@ -358,23 +358,19 @@ function AddressForm(props) {
         </div>
         <div className="row">
           <div className="col">
-            {
-              fetchingZipCodeRelatedData ?
-              <div className="spinner-grow spinner-grow-sm float-end" role="status">
-                <span className="visually-hidden">Obteniendo colonias</span>
-              </div> :
-              <figure className="text-end">
-                <figcaption className="blockquote-footer">
-                  <cite title={`${address.city}, ${address.state}`}>
-                    {
-                      address.zipcode && address.neighborhood ?
-                      `${address.city}, ${address.state}` :
-                      'Introduce un código postal válido'
-                    }
-                  </cite>
-                </figcaption>
-              </figure>
-            }
+            <figure className="text-end">
+              <figcaption className="blockquote-footer">
+                <cite title={`${address.city}, ${address.state}`}>
+                  {
+                    fetchingZipCodeRelatedData ?
+                    'Loading...' :
+                    address.zipcode && address.neighborhood ?
+                    `${address.city}, ${address.state}` :
+                    'Introduce un código postal válido'
+                  }
+                </cite>
+              </figcaption>
+            </figure>
           </div>
         </div>
         <div className="row justify-content-around">
@@ -382,7 +378,14 @@ function AddressForm(props) {
             { address.id && <button onClick={(e) => handleDelete(e)} type="button" className="btn btn-light link-danger">Borrar</button> }
           </div>
           <div className="col">
-            <button type="submit" className="btn btn-primary float-end">Guardar</button>
+            <button
+              type="submit"
+              className="btn btn-primary float-end"
+              disabled={fetchingZipCodeRelatedData}
+            >
+              { fetchingZipCodeRelatedData && <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> }
+              { ` Save` }
+            </button>
           </div>
         </div>
         {!!Object.entries(errors).length && <div className="row">
