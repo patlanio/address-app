@@ -2,6 +2,7 @@
 
 class V1::AddressesController < ApplicationController
   before_action :set_address, only: %i[show update destroy]
+  before_action :set_country, only: %i[update], if: :country_changed?
 
   def index
     @addresses = Address.all
@@ -13,24 +14,19 @@ class V1::AddressesController < ApplicationController
   end
 
   def create
-    @country = Country.find_by_name(address_params[:country])
+    @address = Address.new(address_params.except(:country))
+    set_country
 
-    address = Address.new(address_params.except(:country))
-    address.country = @country
-
-    if address.save!
-      render json: address
+    if @address.save!
+      render jsonapi: @address
     else
-      render json: address.errors, status: :bad_request
+      render json: @address.errors, status: :bad_request
     end
   end
 
   def update
-    @country = Country.find_by_name(address_params[:country])
-    @address.country = @country
-
-    if @address.save!
-      render json: @address
+    if @address.update(address_params.except(:country))
+      render jsonapi: @address
     else
       render json: @address.errors, status: :bad_request
     end
@@ -55,5 +51,15 @@ class V1::AddressesController < ApplicationController
 
   def set_address
     @address = Address.find(params[:id])
+  end
+
+  def set_country
+    @country = Country.find_by_code(address_params[:country])
+    @address.country = @country
+  end
+
+  def country_changed?
+    country = address_params[:country]
+    country.present? && @address.country.code != country
   end
 end
