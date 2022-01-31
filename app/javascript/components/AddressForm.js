@@ -214,16 +214,17 @@ function AddressForm(props) {
     const countryToFetch = manualCountry || address.country
     if (!countryToFetch && !isCountryPresent()) return
 
-    const zipCodeToFetch = zipCodeToFetch || manualZipcode
+    const zipCodeToFetch = manualZipcode || debouncedZipcode
 
-    if (debouncedZipcode) {
+    if (zipCodeToFetch) {
       setFetchingZipCodeRelatedData(true)
-      fetchNeighborhoods(manualCountry, zipCodeToFetch).then(data => {
+      fetchNeighborhoods(countryToFetch, zipCodeToFetch).then(data => {
         const fetchedNeighborhoods = data.neighborhoods || []
         setNeighborhoods(fetchedNeighborhoods)
+        const currentNeighborhood = fetchedNeighborhoods.find(n => n === address.neighborhood)
         setAddress({
           ...address,
-          neighborhood: fetchedNeighborhoods[0],
+          neighborhood: currentNeighborhood || fetchedNeighborhoods[0],
           state: data.state,
           city: data.city
         })
@@ -336,6 +337,7 @@ function AddressForm(props) {
                 required
                 className={`form-control ${errors.neighborhood && 'is-invalid'}`}
                 alt={errors.neighborhood || 'Colonia'}
+                value={address.neighborhood}
                 disabled={!availableNeighborhoods}
                 onChange={(e) => handleNeighborhoodChange(e.target.value) } >
                 {
