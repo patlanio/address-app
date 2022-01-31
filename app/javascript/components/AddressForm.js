@@ -39,8 +39,14 @@ function AddressForm(props) {
 
     fetch('/v1/addresses', requestOptions)
     .then(async response => {
-      const data = await response.json()
-      if (response.status < 200 && response.status >= 300) return Promise.reject(data)
+      let data = await response.json()
+      data = {
+        id: data.data.id,
+        ...data.data.attributes
+      }
+
+      if (response.status < 200 || response.status >= 300) return Promise.reject(data)
+
 
       setRedirectToShow(data.id)
     })
@@ -60,7 +66,7 @@ function AddressForm(props) {
       .then(async response => {
         const data = await response.json()
 
-        if (response.status < 200 && response.status >= 300) return Promise.reject(data)
+        if (response.status < 200 || response.status >= 300) return Promise.reject(data)
 
         setAddress({
           ...address,
@@ -83,7 +89,7 @@ function AddressForm(props) {
 
     fetch(`/v1/addresses/${address.id}`, requestOptions)
       .then(async response => {
-        if (response.status < 200 && response.status >= 300) return Promise.reject()
+        if (response.status < 200 || response.status >= 300) return Promise.reject()
         setRedirectToHome(true)
       })
       .catch((errors) => {
@@ -103,7 +109,7 @@ function AddressForm(props) {
           ...data.data.attributes
         }
 
-        if (response.status < 200 && response.status >= 300 || !data.id)
+        if ((response.status < 200 || response.status >= 300) || !data.id)
           return Promise.reject(data)
 
         setAddress({
@@ -148,7 +154,7 @@ function AddressForm(props) {
   }
 
   const handleZipCodeChange = (zipcode) => {
-    if (zipcode.length > 0) setFetchingZipCodeRelatedData(true)
+    if (zipcode.length > 0 && isCountryPresent()) setFetchingZipCodeRelatedData(true)
 
     setNeighborhoods([])
     setAddress({
@@ -200,48 +206,63 @@ function AddressForm(props) {
     deleteAddress()
   }
 
+  const isCountryPresent = () => {
+    return address.country || countries.length > 0
+  }
+
+  const effectToFetchNeighborhoods = (manualCountry, manualZipcode) => {
+    const countryToFetch = manualCountry || address.country
+    if (!countryToFetch && !isCountryPresent()) return
+
+    const zipCodeToFetch = zipCodeToFetch || manualZipcode
+
+    if (debouncedZipcode) {
+      setFetchingZipCodeRelatedData(true)
+      fetchNeighborhoods(manualCountry, zipCodeToFetch).then(data => {
+        const fetchedNeighborhoods = data.neighborhoods || []
+        setNeighborhoods(fetchedNeighborhoods)
+        setAddress({
+          ...address,
+          neighborhood: fetchedNeighborhoods[0],
+          state: data.state,
+          city: data.city
+        })
+        setFetchingZipCodeRelatedData(false)
+      })
+    } else {
+      setFetchingZipCodeRelatedData(false)
+      setNeighborhoods([])
+      setAddress({
+        ...address,
+        neighborhood: '',
+        state: '',
+        city: ''
+      })
+    }
+  }
+
   useEffect(()=>{
     fetchCountries()
     if (params.addressId || address.id) fetchAddress()
   }, [])
 
   useEffect(()=>{
-    if (countries.length === 0) return
+    if (!isCountryPresent()) return // not set country if still fetching
 
+    const firstCountry = countries[0].code
     setAddress({
       ...address,
-      country: countries[0].code
+      country: firstCountry
     })
+
+    if (isCountryPresent() && address.zipcode && neighborhoods.length === 0) {
+      effectToFetchNeighborhoods(firstCountry, address.zipcode)
+    }
   }, [countries])
 
-  useEffect(
-    () => {
-      if (debouncedZipcode) {
-        setFetchingZipCodeRelatedData(true)
-        fetchNeighborhoods(address.country, debouncedZipcode).then(data => {
-          const fetchedNeighborhoods = data.neighborhoods || []
-          setNeighborhoods(fetchedNeighborhoods)
-          setAddress({
-            ...address,
-            neighborhood: fetchedNeighborhoods[0],
-            state: data.state,
-            city: data.city
-          })
-          setFetchingZipCodeRelatedData(false)
-        })
-      } else {
-        setFetchingZipCodeRelatedData(false)
-        setNeighborhoods([])
-        setAddress({
-          ...address,
-          neighborhood: '',
-          state: '',
-          city: ''
-        })
-      }
-    },
-    [debouncedZipcode]
-  )
+  useEffect(()=>{
+    effectToFetchNeighborhoods()
+  }, [debouncedZipcode])
 
   const availableNeighborhoods = neighborhoods.length > 0
   return (
